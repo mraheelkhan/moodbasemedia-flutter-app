@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
@@ -18,7 +19,7 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   File? _image;
   late AudioPlayer player;
-
+  bool showData = true;
   @override
   void initState() {
     super.initState();
@@ -52,6 +53,7 @@ class _DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     final provider = Provider.of<PlayListProvider>(context);
     var showLoader = false;
+
     TrackResponse tracks = provider.tracks;
 
     return Scaffold(
@@ -77,8 +79,8 @@ class _DashboardState extends State<Dashboard> {
                 child: _image != null
                     ? Image.file(
                         _image!,
-                        width: 300,
-                        height: 300,
+                        width: 200,
+                        height: 200,
                         fit: BoxFit.fitHeight,
                       )
                     : Container(),
@@ -87,7 +89,12 @@ class _DashboardState extends State<Dashboard> {
                   alignment: Alignment.center,
                   child: _image == null
                       ? ElevatedButton(
-                          onPressed: () => {_imgFromGallery()},
+                          onPressed: () {
+                            _imgFromGallery();
+                            setState(() {
+                              this.showData = false;
+                            });
+                          },
                           child: const Text("Upload Picture"))
                       : null),
               Container(
@@ -97,6 +104,7 @@ class _DashboardState extends State<Dashboard> {
                           style: ElevatedButton.styleFrom(primary: Colors.red),
                           onPressed: () => setState(() {
                             _image = null;
+                            this.showData = true;
                           }),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -114,7 +122,9 @@ class _DashboardState extends State<Dashboard> {
                               ElevatedButton.styleFrom(primary: Colors.green),
                           onPressed: () {
                             _image = null;
-                            showLoader = true;
+                            setState(() {
+                              this.showData = true;
+                            });
                             provider.init();
 
                             if (tracks.data != null) {
@@ -135,18 +145,19 @@ class _DashboardState extends State<Dashboard> {
                   // color: Theme.of(context).primaryColorDark,
                   child: Center(
                 child: () {
-                  if (tracks.data != null) {
+                  if (tracks.data != null && this.showData) {
                     return Expanded(
                         child: Container(
-                            height: 400,
+                            height: 450,
                             child: ListView.builder(
                                 shrinkWrap: true,
+                                physics: ClampingScrollPhysics(),
                                 itemCount: tracks.data?.length ?? 0,
                                 itemBuilder: (BuildContext context, int index) {
                                   TrackData track = tracks.data![index];
                                   return ListTile(
                                       title: Text(
-                                        track.title + ' ' + track.url,
+                                        track.title,
                                         style: TextStyle(color: Colors.black),
                                       ),
                                       trailing: Row(
@@ -168,6 +179,13 @@ class _DashboardState extends State<Dashboard> {
                                               },
                                               icon: const Icon(
                                                 Icons.stop_circle_outlined,
+                                                color: Colors.black,
+                                                size: 24.0,
+                                              )),
+                                          IconButton(
+                                              onPressed: () {},
+                                              icon: const Icon(
+                                                Icons.bookmark_add_outlined,
                                                 color: Colors.black,
                                                 size: 24.0,
                                               ))
