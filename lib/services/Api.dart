@@ -14,9 +14,10 @@ class ApiService {
 
   final String baseUrl =
       // 'http://192.168.10.17/Laravel-Flutter-Course-API/public/api/';
-      'http://7eb6-103-255-6-103.ngrok.io/api/';
+      // 'http://920f-39-43-252-144.ngrok.io/api/';
+      'https://moodbasemedia.raheelsays.com/api/';
 
-  /* ##### Model Owner #### */
+  /* ##### Model Track #### */
   Future<TrackResponse> fetchTracks() async {
     TrackResponse _owner;
     http.Response response = await http.get(
@@ -65,7 +66,6 @@ class ApiService {
 
       throw Exception(errorMessage);
     }
-    print(response.body);
     return response.body;
   }
 

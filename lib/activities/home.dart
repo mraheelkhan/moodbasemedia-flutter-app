@@ -12,13 +12,13 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List<Widget> widgetOptions = [Dashboard(), Owners(), TestPage()];
+  List<Widget> widgetOptions = [Dashboard()];
   int selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Welcome to DVM Dashboard',
+      title: 'Welcome to Mood Dashboard',
       theme: ThemeData.from(colorScheme: ColorScheme.light()),
       home: Scaffold(
         body: widgetOptions.elementAt(selectedIndex),
@@ -26,7 +26,7 @@ class _HomeState extends State<Home> {
           shape: const CircularNotchedRectangle(),
           notchMargin: 4,
           child: BottomNavigationBar(
-            backgroundColor: Color(0xff3700b3),
+            backgroundColor: Color(0xffffff),
             unselectedItemColor: Colors.grey,
             selectedItemColor: Colors.black,
             elevation: 0,
@@ -35,14 +35,14 @@ class _HomeState extends State<Home> {
                 icon: Icon(Icons.account_balance_wallet),
                 label: 'Dashboard',
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.list_alt),
-                label: 'Playlist',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.image_sharp),
-                label: 'Upload',
-              ),
+              // BottomNavigationBarItem(
+              //   icon: Icon(Icons.list_alt),
+              //   label: 'Playlist',
+              // ),
+              // BottomNavigationBarItem(
+              //   icon: Icon(Icons.image_sharp),
+              //   label: 'Upload',
+              // ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.logout_outlined),
                 label: 'Logout',
@@ -57,7 +57,7 @@ class _HomeState extends State<Home> {
   }
 
   void onItemTapped(int index) {
-    if (index == 3) {
+    if (index == 1) {
       AuthProvider authProvider =
           Provider.of<AuthProvider>(context, listen: false);
       authProvider.logOut();
