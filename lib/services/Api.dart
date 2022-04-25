@@ -14,7 +14,7 @@ class ApiService {
 
   final String baseUrl =
       // 'http://192.168.10.17/Laravel-Flutter-Course-API/public/api/';
-      // 'http://920f-39-43-252-144.ngrok.io/api/';
+      // 'https://f082-203-135-44-46.ngrok.io/api/';
       'https://moodbasemedia.raheelsays.com/api/';
 
   /* ##### Model Track #### */
@@ -32,6 +32,25 @@ class ApiService {
     var owner = jsonDecode(response.body);
 
     _owner = TrackResponse.fromJson(owner);
+    return _owner;
+  }
+
+  /* ##### Model Track By Mood #### */
+  Future<TrackResponse> fetchTracksByMood(String mood) async {
+    TrackResponse _owner;
+    http.Response response = await http.get(
+      Uri.parse(baseUrl + 'medias/' + mood),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json',
+        HttpHeaders.acceptHeader: 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer $token'
+      },
+    );
+
+    var owner = jsonDecode(response.body);
+
+    _owner = TrackResponse.fromJson(owner);
+    print(_owner);
     return _owner;
   }
 
@@ -96,6 +115,8 @@ class ApiService {
 
       throw Exception(errorMessage);
     }
+    print('debugger');
+    print(response.body);
     return response.body;
   }
 }

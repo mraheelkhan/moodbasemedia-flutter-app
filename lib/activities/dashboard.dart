@@ -11,7 +11,11 @@ import 'package:moodbasemedia/providers/PlayListProvider.dart';
 import 'package:moodbasemedia/services/Api.dart';
 import 'package:provider/provider.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:http/http.dart' as http;
 
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 class Dashboard extends StatefulWidget {
   @override
   _DashboardState createState() => _DashboardState();
@@ -19,8 +23,11 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   File? _image;
+  String Mood = "?";
+  TrackResponse trackss = TrackResponse();
+  late ApiService apiService;
   late AudioPlayer player;
-  bool showData = true;
+  bool showData = false;
   @override
   void initState() {
     super.initState();
@@ -49,13 +56,60 @@ class _DashboardState extends State<Dashboard> {
       _image = File(image!.path);
     });
   }
+  _imgFromCamera() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+    setState(() {
+      _image = File(image!.path);
+    });
+  }
+
+  _uploadImageToServer(String title, File? file) async{
+    //create multipart request for POST or PATCH method
+    var request = http.MultipartRequest("POST", Uri.parse("http://cc53-39-41-190-100.ngrok.io/predict"));
+    //add text fields
+    request.fields["text_field"] = "asds";
+    //create multipart using filepath, string or bytes
+    var pic = null;
+    pic = await http.MultipartFile.fromPath("file1", file!.path);
+    //add multipart to request
+    request.files.add(pic);
+    var response = await request.send();
+    //Get the response from the server
+    var responseData = await response.stream.toBytes();
+    var responseString = String.fromCharCodes(responseData);
+    // var json = responseString
+    var mood = json.decode(responseString);
+    Mood = json.decode(responseString);
+    print(Mood);
+    _fetchTracks(Mood);
+    setState(() {
+      showData = true;
+    });
+
+  }
+
+  _fetchTracks(String mood) async{
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token') ?? '';
+    this.apiService = ApiService(token);
+
+    trackss = await apiService.fetchTracksByMood(mood);
+    setState(() {
+      trackss = trackss;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<PlayListProvider>(context);
     var showLoader = false;
 
-    TrackResponse tracks = provider.tracks;
+
+      TrackResponse  tracks = trackss;
+    setState(() {
+      TrackResponse  tracks = trackss;
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -69,8 +123,11 @@ class _DashboardState extends State<Dashboard> {
               Container(
                   alignment: Alignment.center,
                   child: Column(
-                    children: const <Widget>[
+                    children: <Widget>[
                       Text('Dashboard',
+                          style: TextStyle(
+                              fontSize: 28, fontWeight: FontWeight.bold)),
+                      Text('Mood ' + (Mood.isNotEmpty ? Mood.toString() : '' ),
                           style: TextStyle(
                               fontSize: 28, fontWeight: FontWeight.bold)),
                     ],
@@ -93,10 +150,24 @@ class _DashboardState extends State<Dashboard> {
                           onPressed: () {
                             _imgFromGallery();
                             setState(() {
-                              this.showData = false;
+                              showData = false;
+                              Mood = '?';
                             });
                           },
-                          child: const Text("Upload Picture"))
+                          child: const Text("Gallery Picture"))
+                      : null),
+              Container(
+                  alignment: Alignment.center,
+                  child: _image == null
+                      ? ElevatedButton(
+                      onPressed: () {
+                        _imgFromCamera();
+                        setState(() {
+                          showData = false;
+                          Mood = '?';
+                        });
+                      },
+                      child: const Text("Take Picture"))
                       : null),
               Container(
                   alignment: Alignment.center,
@@ -122,14 +193,17 @@ class _DashboardState extends State<Dashboard> {
                           style:
                               ElevatedButton.styleFrom(primary: Colors.green),
                           onPressed: () {
-                            _image = null;
-                            setState(() {
-                              this.showData = true;
-                            });
-                            provider.init();
 
+                            showData = true;
+
+                            _uploadImageToServer('image', _image);
                             if (tracks.data != null) {
                             } else {}
+                            _image = null;
+                            setState(() {
+                              showData = true;
+                              _image = null;
+                            });
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -140,16 +214,17 @@ class _DashboardState extends State<Dashboard> {
                           ),
                         )
                       : null),
-
+              //Text("dsaf = " + showData.toString() + " === " + tracks.data.toString()),
               const Padding(padding: EdgeInsets.only(top: 50)),
               Container(
                   // color: Theme.of(context).primaryColorDark,
                   child: Center(
                 child: () {
-                  if (tracks.data != null && this.showData) {
+                  if (tracks.data != null && showData) {
+
                     return Expanded(
                         child: Container(
-                            height: 450,
+                            height: 350,
                             child: ListView.builder(
                                 shrinkWrap: true,
                                 physics: ClampingScrollPhysics(),
@@ -183,13 +258,6 @@ class _DashboardState extends State<Dashboard> {
                                                 color: Colors.black,
                                                 size: 24.0,
                                               )),
-                                          IconButton(
-                                              onPressed: () {},
-                                              icon: const Icon(
-                                                Icons.bookmark_add_outlined,
-                                                color: Colors.black,
-                                                size: 24.0,
-                                              ))
                                         ],
                                       ));
                                 })));
